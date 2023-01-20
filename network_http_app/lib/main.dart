@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'networking_http.dart';
 
 void main() {
-  runApp(MaterialApp(
+  runApp(const MaterialApp(
     debugShowCheckedModeBanner: false,
     home: NetworkHttp(),
   ));
