@@ -5,6 +5,18 @@ import 'package:http/http.dart' as http;
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:network_http_app/themes.dart';
 
+String capitalizeAllWord(String value) {
+  var result = value[0].toUpperCase();
+  for (int i = 1; i < value.length; i++) {
+    if (value[i - 1] == " ") {
+      result = result + value[i].toUpperCase();
+    } else {
+      result = result + value[i];
+    }
+  }
+  return result;
+}
+
 class NetworkHttp extends StatefulWidget {
   const NetworkHttp({super.key});
 
@@ -47,10 +59,13 @@ class _NetworkHttpState extends State<NetworkHttp> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   TextFormField(
-                                    keyboardType: TextInputType.text,
-                                    textCapitalization:
-                                        TextCapitalization.sentences,
                                     controller: add1,
+                                    onChanged: (value) {
+                                      add1.value = TextEditingValue(
+                                          text: capitalizeAllWord(value),
+                                          selection: add1.selection);
+                                    },
+                                    keyboardType: TextInputType.text,
                                     decoration: const InputDecoration(
                                       labelText: 'Name',
                                       icon: Icon(Icons.person_add),
@@ -117,7 +132,7 @@ class _NetworkHttpState extends State<NetworkHttp> {
                             onPressed: (() {
                               if (_formKey.currentState!.validate()) {
                                 postData({
-                                  "nama": add1.text.toUpperCase(),
+                                  "nama": add1.text,
                                   "email": add2.text,
                                   "gender": itemGender,
                                   "password": ""
@@ -212,214 +227,233 @@ class _UsingTheDataState extends State<UsingTheData> {
     return FutureBuilder(
         future: getData().then((value) => value.body),
         builder: (context, snapshot) {
-          if (snapshot.hasData) {
+          if (snapshot.hasError) {
+            return Center(child: Text('Terjadi kesalahan ${snapshot.error}'));
+          } else if (snapshot.hasData) {
             List<dynamic> json = jsonDecode(snapshot.data!);
-            return ListView.builder(
-              itemCount: json.length,
-              itemBuilder: (context, index) {
-                return Card(
-                  margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor:
-                            json[index]["gender"].toUpperCase() == "WANITA"
-                                ? Colors.pink[300]
-                                : Colors.blue[300],
-                        child: Text(
-                          "${json[index]["nama"][0].toUpperCase()}",
-                          style: const TextStyle(color: Colors.white),
+            if (json.isEmpty) {
+              return Center(
+                  child: Text("Tidak ada data!", style: extraBoldColor24));
+            } else {
+              return ListView.builder(
+                itemCount: json.length,
+                itemBuilder: (context, index) {
+                  return Card(
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: json[index]["gender"] == "WANITA"
+                              ? Colors.pink[300]
+                              : Colors.blue[300],
+                          child: Text(
+                            "${json[index]["nama"][0].toUpperCase()}",
+                            style: const TextStyle(color: Colors.white),
+                          ),
                         ),
-                      ),
-                      title: Text(
-                        "${json[index]["nama"]}",
-                        style: font1,
-                      ),
-                      subtitle: Text("${json[index]["email"]}"),
-                      onTap: () {
-                        print("nama : ${json[index]["nama"]}");
-                        print("Email : ${json[index]["email"]}");
-                      },
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            onPressed: () {
-                              add1.text = json[index]["nama"];
-                              add2.text = json[index]["email"];
-                              add3.text = json[index]["gender"];
-                              showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return AlertDialog(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(15),
-                                        ),
-                                        scrollable: true,
-                                        content: Padding(
-                                            padding: const EdgeInsets.all(10.0),
-                                            child: Form(
-                                              key: _formKey,
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  TextFormField(
-                                                    controller: add1,
-                                                    decoration:
-                                                        const InputDecoration(
-                                                      labelText: 'Name',
-                                                      icon: Icon(
-                                                          Icons.person_add),
-                                                    ),
-                                                    validator: (value) {
-                                                      if (value == null ||
-                                                          value.isEmpty) {
-                                                        return 'Please input your Name';
-                                                      }
-                                                      if (value.length < 2) {
-                                                        return "Your name too short";
-                                                      }
-                                                      return null;
-                                                    },
-                                                  ),
-                                                  TextFormField(
-                                                    controller: add2,
-                                                    decoration:
-                                                        const InputDecoration(
-                                                      labelText: 'Email',
-                                                      icon: Icon(Icons.email),
-                                                    ),
-                                                    validator: (value) {
-                                                      if (value == null ||
-                                                          value.isEmpty) {
-                                                        return 'Please input your Email';
-                                                      }
-                                                      if (!EmailValidator
-                                                          .validate(value)) {
-                                                        return 'Please enter a valid email';
-                                                      }
-                                                      return null;
-                                                    },
-                                                  ),
-                                                  const SizedBox(height: 5),
-                                                  DropdownSearch<String>(
-                                                    popupProps:
-                                                        const PopupProps.menu(
-                                                      fit: FlexFit.loose,
-                                                      showSelectedItems: true,
-                                                    ),
-                                                    items: ["Pria", "Wanita"],
-                                                    onChanged: ((value) {
-                                                      itemGender =
-                                                          value!.toUpperCase();
-                                                    }),
-                                                    dropdownDecoratorProps:
-                                                        const DropDownDecoratorProps(
-                                                            dropdownSearchDecoration:
-                                                                InputDecoration(
-                                                      icon: Icon(Icons.male),
-                                                      labelText: "Gender",
-                                                    )),
-                                                    selectedItem: add3.text,
-                                                    validator: (value) {
-                                                      if (value == null ||
-                                                          value.isEmpty) {
-                                                        return 'Please input your Email';
-                                                      }
-                                                    },
-                                                  )
-                                                ],
-                                              ),
-                                            )),
-                                        actions: [
-                                          ElevatedButton(
-                                            child: Text("Update"),
-                                            // style: ButtonStyle(
-                                            //     backgroundColor:
-                                            //         MaterialStateProperty.all(Colors.purple)),
-                                            onPressed: (() {
-                                              if (_formKey.currentState!
-                                                  .validate()) {
-                                                updateData(json[index]["id"], {
-                                                  "nama": add1.text,
-                                                  "email": add2.text,
-                                                  "gender": itemGender,
-                                                  "password": ""
-                                                });
-                                                add1.clear();
-                                                add2.clear();
-                                                add3.clear();
-                                                Navigator.of(context).pop();
-                                                showDialog<String>(
-                                                  context: context,
-                                                  builder:
-                                                      (BuildContext context) =>
-                                                          AlertDialog(
-                                                    title: const Text(
-                                                        "Data Berhasil diupdate"),
-                                                    content: const Text(
-                                                        "Silahkan kembali"),
-                                                    actions: <Widget>[
-                                                      TextButton(
-                                                        onPressed: () =>
-                                                            Navigator.pop(
-                                                                context, "ok"),
-                                                        child: const Text("ok"),
+                        title: Text(
+                          "${json[index]["nama"]}",
+                          style: font1,
+                        ),
+                        subtitle: Text("${json[index]["email"]}"),
+                        onTap: () {
+                          print("nama : ${json[index]["nama"]}");
+                          print("Email : ${json[index]["email"]}");
+                        },
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              onPressed: () {
+                                add1.text = json[index]["nama"];
+                                add2.text = json[index]["email"];
+                                add3.text = json[index]["gender"];
+                                showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(15),
+                                          ),
+                                          scrollable: true,
+                                          content: Padding(
+                                              padding:
+                                                  const EdgeInsets.all(10.0),
+                                              child: Form(
+                                                key: _formKey,
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    TextFormField(
+                                                      controller: add1,
+                                                      onChanged: (value) {
+                                                        add1.value =
+                                                            TextEditingValue(
+                                                                text:
+                                                                    capitalizeAllWord(
+                                                                        value),
+                                                                selection: add1
+                                                                    .selection);
+                                                      },
+                                                      decoration:
+                                                          const InputDecoration(
+                                                        labelText: 'Name',
+                                                        icon: Icon(
+                                                            Icons.person_add),
                                                       ),
-                                                    ],
-                                                  ),
-                                                );
-                                                // });
-                                              }
-                                            }),
-                                          )
-                                        ]);
-                                  });
-                            },
-                            icon: const Icon(
-                              Icons.edit,
+                                                      validator: (value) {
+                                                        if (value == null ||
+                                                            value.isEmpty) {
+                                                          return 'Please input your Name';
+                                                        }
+                                                        if (value.length < 2) {
+                                                          return "Your name too short";
+                                                        }
+                                                        return null;
+                                                      },
+                                                    ),
+                                                    TextFormField(
+                                                      controller: add2,
+                                                      decoration:
+                                                          const InputDecoration(
+                                                        labelText: 'Email',
+                                                        icon: Icon(Icons.email),
+                                                      ),
+                                                      validator: (value) {
+                                                        if (value == null ||
+                                                            value.isEmpty) {
+                                                          return 'Please input your Email';
+                                                        }
+                                                        if (!EmailValidator
+                                                            .validate(value)) {
+                                                          return 'Please enter a valid email';
+                                                        }
+                                                        return null;
+                                                      },
+                                                    ),
+                                                    const SizedBox(height: 5),
+                                                    DropdownSearch<String>(
+                                                      popupProps:
+                                                          const PopupProps.menu(
+                                                        fit: FlexFit.loose,
+                                                        showSelectedItems: true,
+                                                      ),
+                                                      items: ["Pria", "Wanita"],
+                                                      onChanged: ((value) {
+                                                        itemGender = value!
+                                                            .toUpperCase();
+                                                      }),
+                                                      dropdownDecoratorProps:
+                                                          const DropDownDecoratorProps(
+                                                              dropdownSearchDecoration:
+                                                                  InputDecoration(
+                                                        icon: Icon(Icons.male),
+                                                        labelText: "Gender",
+                                                      )),
+                                                      selectedItem: add3.text,
+                                                      validator: (value) {
+                                                        if (value == null ||
+                                                            value.isEmpty) {
+                                                          return 'Please input your Email';
+                                                        }
+                                                      },
+                                                    )
+                                                  ],
+                                                ),
+                                              )),
+                                          actions: [
+                                            ElevatedButton(
+                                              child: const Text("Update"),
+                                              // style: ButtonStyle(
+                                              //     backgroundColor:
+                                              //         MaterialStateProperty.all(Colors.purple)),
+                                              onPressed: (() {
+                                                if (_formKey.currentState!
+                                                    .validate()) {
+                                                  updateData(
+                                                      json[index]["id"], {
+                                                    "nama": add1.text,
+                                                    "email": add2.text,
+                                                    "gender": itemGender,
+                                                    "password": ""
+                                                  });
+                                                  add1.clear();
+                                                  add2.clear();
+                                                  add3.clear();
+                                                  Navigator.of(context).pop();
+                                                  showDialog<String>(
+                                                    context: context,
+                                                    builder: (BuildContext
+                                                            context) =>
+                                                        AlertDialog(
+                                                      title: const Text(
+                                                          "Data Berhasil diupdate"),
+                                                      content: const Text(
+                                                          "Silahkan kembali"),
+                                                      actions: <Widget>[
+                                                        TextButton(
+                                                          onPressed: () =>
+                                                              Navigator.pop(
+                                                                  context,
+                                                                  "ok"),
+                                                          child:
+                                                              const Text("ok"),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                  // });
+                                                }
+                                              }),
+                                            )
+                                          ]);
+                                    });
+                              },
+                              icon: const Icon(
+                                Icons.edit,
+                              ),
                             ),
-                          ),
-                          IconButton(
-                            onPressed: () {
-                              showDialog<String>(
-                                context: context,
-                                builder: (BuildContext context) => AlertDialog(
-                                  title: const Text("Menghapus data"),
-                                  content: const Text(
-                                      "Anda yakin ingin menghapus data ini!"),
-                                  actions: <Widget>[
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.pop(context, "cancel");
-                                      },
-                                      child: const Text("Cancel"),
-                                    ),
-                                    TextButton(
-                                      onPressed: (() {
-                                        setState(() {
-                                          deleteData(json[index]["id"]);
-                                          Navigator.pop(context, "ok");
-                                        });
-                                      }),
-                                      child: const Text("ok"),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                            icon: const Icon(
-                              Icons.remove_circle_outline,
+                            IconButton(
+                              onPressed: () {
+                                showDialog<String>(
+                                  context: context,
+                                  builder: (BuildContext context) =>
+                                      AlertDialog(
+                                    title: const Text("Menghapus data"),
+                                    content: const Text(
+                                        "Anda yakin ingin menghapus data ini!"),
+                                    actions: <Widget>[
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.pop(context, "cancel");
+                                        },
+                                        child: const Text("Cancel"),
+                                      ),
+                                      TextButton(
+                                        onPressed: (() {
+                                          setState(() {
+                                            deleteData(json[index]["id"]);
+                                            Navigator.pop(context, "ok");
+                                          });
+                                        }),
+                                        child: const Text("ok"),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                              icon: const Icon(
+                                Icons.remove_circle_outline,
+                              ),
                             ),
-                          ),
-                        ],
-                      )),
-                );
-              },
-            );
-          } else if (snapshot.hasError) {
-            return Center(child: Text('${snapshot.error}'));
+                          ],
+                        )),
+                  );
+                },
+              );
+            }
           }
           return const Center(child: CircularProgressIndicator());
         });

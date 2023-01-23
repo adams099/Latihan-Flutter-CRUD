@@ -48,6 +48,16 @@ TextStyle bold14 = GoogleFonts.poppins(fontSize: 14, fontWeight: bold);
 TextStyle bold15 = GoogleFonts.poppins(fontSize: 15, fontWeight: bold);
 TextStyle font1 = TextStyle(fontSize: 15, fontWeight: bold);
 
-TextStyle extraBold18 = GoogleFonts.nunito(fontSize: 18, fontWeight: extraBold);
-TextStyle extraBold26 =
-    GoogleFonts.poppins(fontSize: 26, fontWeight: extraBold);
+TextStyle extraBold18 = GoogleFonts.nunito(
+  fontSize: 18,
+  fontWeight: extraBold,
+);
+TextStyle extraBold26 = GoogleFonts.poppins(
+  fontSize: 26,
+  fontWeight: extraBold,
+);
+TextStyle extraBoldColor24 = GoogleFonts.poppins(
+  fontSize: 24,
+  fontWeight: extraBold,
+  color: Colors.white,
+);
